@@ -382,8 +382,10 @@ async def main():
 	if args.add:
 		real_ip, virt_ip, common_name = args.add
 		openvpn_user_manager.add_user(real_ip, virt_ip, common_name)
+		exit(1)
 	elif args.delete:
 		openvpn_user_manager.delete_user(args.delete)
+		exit(1)
 	else:
 		await asyncio.create_task(openvpn_user_manager.update_user_monitoring())
 		openvpn_user_manager.update_user_data()
