@@ -69,7 +69,7 @@ echo -e "${BLUE}Creating systemd service...${PLAIN}"
 
 SERVICE_FILE="/etc/systemd/system/ovpn-traffic-monitor.service"
 SCRIPT_PATH=$(realpath traffic_monitor.py)
-USER=$(whoami)
+CONFIG_PATH=$(realpath config.ini)
 cat << EOF >> $SERVICE_FILE
 [Unit]
 Description=OpenVPN Client Traffic Monitor
@@ -77,7 +77,7 @@ After=network.target openvpn.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 $SCRIPT_PATH --config /home/$USER/ovpn-traffic-monitor/config.ini
+ExecStart=/usr/bin/python3 $SCRIPT_PATH --config $CONFIG_PATH
 Restart=always
 User=root
 
@@ -92,3 +92,5 @@ systemctl start ovpn-traffic-monitor
 
 echo -e "${GREEN}All required dependencies have been installed and the systemd has been set up.${PLAIN}"
 echo -e "${GREEN}The traffic monitor python script will now run automatically on system boot.${PLAIN}"
+
+echo -e "${YELLOW}systemd service file: $SERVICE_FILE${PLAIN}"
