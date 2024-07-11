@@ -115,6 +115,7 @@ class TrafficMonitorLogger:
 		"""
 		timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 		log_entry = f'[{timestamp}] {user_uuid} ({virtual_ip}/{real_ip}) visited the site {website}'
+		print(log_entry)
 
 		with open(Config().TRAFFIC_LOG) as file:
 			file.write(f'{log_entry}\n')
