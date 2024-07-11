@@ -315,7 +315,7 @@ class OpenVPNUserManager:
 				self.logger.log(f'Starting monitoring for user ({real_ip}/{virtual_ip} - {common_name})', 'info')
 				await asyncio.create_task(self.tcpdump_manager.monitor_user_traffic(user_uuid, real_ip, virtual_ip))
 
-		for user in users:
+		for user in users_list:
 			try:
 				data = self.tcpdump_manager.active_processes[user[2]]
 				print(f'User: {data}')
