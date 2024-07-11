@@ -327,14 +327,8 @@ class OpenVPNUserManager:
 			common_name = users_data[real_ip]['common_name']
 			user_uuid = users_data[real_ip]['uuid']
 
-			tasks.append(asyncio.create_task(self.tcpdump_manager.monitor_user_traffic(user_uuid, real_ip, virtual_ip)))
-
-			# if real_ip not in self.tcpdump_manager.active_processes:
-			# 	self.logger.log(f'Starting monitoring for user ({real_ip}/{virtual_ip} - {common_name})', 'info')
-			# 	await self.tcpdump_manager.monitor_user_traffic(user_uuid, real_ip, virtual_ip)
-			# 	print('Wait...')
-			# else:
-			# 	print('no')
+			if real_ip not in self.tcpdump_manager.active_processes:
+				tasks.append(asyncio.create_task(self.tcpdump_manager.monitor_user_traffic(user_uuid, real_ip, virtual_ip)))
 
 		await asyncio.gather(*tasks)
 
