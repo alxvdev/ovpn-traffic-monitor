@@ -304,7 +304,7 @@ class OpenVPNUserManager:
 		Update the tcpdump monitoring for users
 		"""
 		users_list = self.parse_openvpn_users() # list[list] of users
-		users_data = self.update_user_data(users_list) # dict of users
+		users_data = await self.update_user_data(users_list) # dict of users
 
 		for user in users_list:
 			real_ip = user[2]
@@ -389,7 +389,7 @@ async def main():
 		exit(1)
 	else:
 		await asyncio.create_task(openvpn_user_manager.update_user_monitoring())
-		openvpn_user_manager.update_user_data()
+		await openvpn_user_manager.update_user_data()
 
 	while True:
 		try:
