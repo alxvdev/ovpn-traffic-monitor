@@ -173,6 +173,7 @@ class TCPDumpManager:
 
 		while True:
 			output = process.stdout.readline().decode()
+			print(output)
 
 			if (output == '' and process.poll() is not None) or process_data['real_ip'] not in self.active_processes:
 				print('Stop monitoring user traffic...')
@@ -199,7 +200,7 @@ class TCPDumpManager:
 		tcpdump_filter += ' or '.join([f'host {website}' for website in self.config.MONITORING_SITES])
 		process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, '-n', '-U', tcpdump_filter],
 									stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		self.logger.log(f'Executing a command to monitor network traffic: tcpdump -i {self.config.NETWORK_INTERFACE} -n -U -v {tcpdump_filter}', 'info')
+		self.logger.log(f'Executing a command to monitor network traffic: tcpdump -i {self.config.NETWORK_INTERFACE} -n -U {tcpdump_filter}', 'info')
 
 		if process.returncode == 1:
 			self.logger.log(f'An error occurred during the command to start the traffic monitoring process: {process.stderr}', 'error')
