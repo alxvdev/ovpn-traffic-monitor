@@ -332,7 +332,7 @@ class OpenVPNUserManager:
 		for user in users_list:
 			try:
 				data = self.tcpdump_manager.active_processes[user[2]]
-				print(f'User: {data["uuid"]}')
+				# print(f'User: {data["uuid"]}')
 			except KeyError:
 				self.tcpdump_manager.stop_user_traffic_monitoring(user[2])
 
