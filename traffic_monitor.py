@@ -306,7 +306,7 @@ class OpenVPNUserManager:
 		users_data = self.update_user_data()
 
 		for user in users_list:
-			real_ip = users_list[2]
+			real_ip = user[2]
 			virtual_ip = users_data[real_ip]['virtual_ip']
 			common_name = users_data[real_ip]['common_name']
 			user_uuid = users_data[real_ip]['uuid']
