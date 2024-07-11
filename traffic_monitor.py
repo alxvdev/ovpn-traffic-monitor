@@ -198,7 +198,7 @@ class TCPDumpManager:
 		tcpdump_filter += ' or '.join([f'host {website}' for website in self.config.MONITORING_SITES])
 		process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, '-n', '-U', '-v', tcpdump_filter],
 									stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		print(f'[dim italic]Executing a command to monitor network traffic: tcpdump -i {self.config.NETWORK_INTERFACE} -n -U -v {tcpdump_filter}[/dim italic]')
+		self.logger.log(f'Executing a command to monitor network traffic: tcpdump -i {self.config.NETWORK_INTERFACE} -n -U -v {tcpdump_filter}', 'info')
 
 		if process.returncode == 1:
 			self.logger.log(f'An error occurred during the command to start the traffic monitoring process: {process.stderr}', 'error')
@@ -309,7 +309,7 @@ class OpenVPNUserManager:
 			common_name = user[1]
 			real_ip = user[2]
 
-			if real_ip in self.tcpdump_manager.active_processes:
+			if real_ip not in self.tcpdump_manager.active_processes:
 				self.logger.log(f'Starting monitoring for user ({real_ip}/{virtual_ip} - {common_name})', 'info')
 				await asyncio.create_task(self.tcpdump_manager.monitor_user_traffic())
 
