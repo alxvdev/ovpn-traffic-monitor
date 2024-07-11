@@ -168,7 +168,9 @@ class TCPDumpManager:
 		self.logger = plain_logger
 		self.config = config
 
-	async def _traffic_logging(self, process_data: dict) -> None:
+	async def traffic_logging(self, process_data: dict) -> None:
+		print(f'Traffic logging: {process_data['process']}')
+
 		process = process_data['process']
 
 		while True:
@@ -196,7 +198,7 @@ class TCPDumpManager:
 		"""
 		tcpdump_filter = f'src {virtual_ip} and '
 		tcpdump_filter += ' or '.join([f'host {website}' for website in self.config.MONITORING_SITES])
-		process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, '-n', '-U', '-v', tcpdump_filter],
+		process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, '-n', '-U', tcpdump_filter],
 									stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		self.logger.log(f'Executing a command to monitor network traffic: tcpdump -i {self.config.NETWORK_INTERFACE} -n -U -v {tcpdump_filter}', 'info')
 
@@ -211,7 +213,7 @@ class TCPDumpManager:
 			'real_ip': real_ip
 		}
 
-		async_task = asyncio.create_task(self._traffic_logging(process_data))
+		async_task = asyncio.create_task(self.traffic_logging(process_data))
 		await async_task
 
 		process_data['task'] = async_task
@@ -395,7 +397,6 @@ async def main():
 			await asyncio.create_task(openvpn_user_manager.update_user_monitoring())
 			openvpn_user_manager.update_user_data()
 
-			print(tcpdump_manager.active_processes)
 			# for real_ip, user_data in tcpdump_manager.active_processes.items():
 			# 	virtual_ip = user_data['virtual_ip']
 			# 	uuid = user_data['user_uuid']
