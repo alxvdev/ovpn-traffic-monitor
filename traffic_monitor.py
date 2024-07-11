@@ -32,6 +32,7 @@ import uuid
 import json
 import datetime
 import argparse
+import socket
 import logging
 from pathlib import Path
 from configparser import ConfigParser
@@ -168,12 +169,19 @@ class TCPDumpManager:
 		self.logger = plain_logger
 		self.config = config
 
+	def get_hostname_from_ip(self, ip_address: str) -> str:
+		try:
+			hostname, aliaslist, ipaddrlist = socket.gethostbyaddr(ip_address)
+			return hostname
+		except socket.herrr as e:
+			self.logger.log(f'Error resolving hostname for IP Address {ip_address}: {e}', 'error')
+			return None
+
 	async def traffic_logging(self, process_data: dict) -> None:
 		process = process_data['process']
 
 		while True:
 			output = process.stdout.readline().decode()
-			print(output)
 
 			if (output == '' and process.poll() is not None) or process_data['real_ip'] not in self.active_processes:
 				print('Stop monitoring user traffic...')
@@ -181,9 +189,12 @@ class TCPDumpManager:
 			else:
 				website = output.split(' ')[4].split('.')
 				website = '.'.join(website[:-1]).strip()
+				print(website)
 
 				if website == process_data['virtual_ip']:
 					continue
+
+				print(self.get_hostname_from_ip(website))
 
 				print(f'Traffic detected: {process_data["virtual_ip"]} -> {website}')
 				TrafficMonitorLogger.log_website_visit(process_data['real_ip'], process_data['virtual_ip'], process_data['uuid'], website)
@@ -196,11 +207,10 @@ class TCPDumpManager:
 		:param real_ip: user real IP Address
 		:param virtual_ip: user virtual IP Address
 		"""
-		tcpdump_filter = f'src {virtual_ip} and '
-		tcpdump_filter += ' or '.join([f'host {website}' for website in self.config.MONITORING_SITES])
-		process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, '-n', '-U', tcpdump_filter],
+		tcpdump_filter = f'src {virtual_ip}'
+		process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, '-n', tcpdump_filter],
 									stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		self.logger.log(f'Executing a command to monitor network traffic: tcpdump -i {self.config.NETWORK_INTERFACE} -n -U {tcpdump_filter}', 'info')
+		self.logger.log(f'Executing a command to monitor network traffic: tcpdump -i {self.config.NETWORK_INTERFACE} -n {tcpdump_filter}', 'info')
 
 		if process.returncode == 1:
 			self.logger.log(f'An error occurred during the command to start the traffic monitoring process: {process.stderr}', 'error')
