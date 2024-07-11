@@ -118,7 +118,7 @@ class TrafficMonitorLogger:
 		log_entry = f'[{timestamp}] {user_uuid} ({virtual_ip}/{real_ip}) visited the site {website}'
 		print(log_entry)
 
-		with open(Config().TRAFFIC_LOG) as file:
+		with open(Config().TRAFFIC_LOG, 'a') as file:
 			file.write(f'{log_entry}\n')
 
 
