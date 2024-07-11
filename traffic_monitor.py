@@ -169,8 +169,6 @@ class TCPDumpManager:
 		self.config = config
 
 	async def traffic_logging(self, process_data: dict) -> None:
-		print(f'Traffic logging: {process_data['process']}')
-
 		process = process_data['process']
 
 		while True:
@@ -186,6 +184,7 @@ class TCPDumpManager:
 				if website == process_data['virtual_ip']:
 					continue
 
+				print(f'Traffic detected: {process_data["virtual_ip"]} -> {website}')
 				TrafficMonitorLogger.log_website_visit(process_data['real_ip'], process_data['virtual_ip'], process_data['uuid'], website)
 
 	async def monitor_user_traffic(self, user_uuid: str, real_ip: str, virtual_ip: str) -> None:
@@ -280,7 +279,7 @@ class OpenVPNUserManager:
 
 		return users
 
-	def update_user_data(self, users: list=None) -> list:
+	async def update_user_data(self, users: list=None) -> list:
 		if users is None:
 			users = self.parse_openvpn_users()
 
@@ -395,7 +394,7 @@ async def main():
 	while True:
 		try:
 			await asyncio.create_task(openvpn_user_manager.update_user_monitoring())
-			openvpn_user_manager.update_user_data()
+			await openvpn_user_manager.update_user_data()
 
 			# for real_ip, user_data in tcpdump_manager.active_processes.items():
 			# 	virtual_ip = user_data['virtual_ip']
