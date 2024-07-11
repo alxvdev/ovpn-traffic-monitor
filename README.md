@@ -35,7 +35,7 @@ log_file=/var/log/wavevpn.log
 
 [MONITOR]
 network_interface=tun0
-monitoring_sites=216.58.207.0/24,151.101.0.0/16,77.88.255.255/16
+monitoring_sites=216.58.207.0/24,151.101.0.0/16,77.88.0.0/16
 ```
 
 Create this and launch:
