@@ -40,7 +40,7 @@ apt install -y -qq  \
 	tcpdump \
 	openvpn \
 	watchdog \
-	jq > dev/null 2>&1
+	jq > /dev/null 2>&1
 
 if [[ $? -eq 0 ]]; then
 	echo -e "${GREEN}Core dependencies installed successfully.${PLAIN}"
