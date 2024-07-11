@@ -188,17 +188,12 @@ class TCPDumpManager:
 				break
 			else:
 				output = output.decode()
-				website = output.split(' ')[4].split('.')
-				website = '.'.join(website[:-1]).strip()
+				website = output.split(' ')[4]
+				# website = output.split(' ')[4].split('.')
+				# website = '.'.join(website[:-1]).strip()
 				
-
 				if website == process_data['virtual_ip']:
 					continue
-
-				try:
-					print('google' in self.get_hostname_from_ip(website))
-				except Exception as ex:
-					pass
 
 				print(f'Traffic detected: {process_data["virtual_ip"]} -> {website}')
 				TrafficMonitorLogger.log_website_visit(process_data['real_ip'], process_data['virtual_ip'], process_data['uuid'], website)
