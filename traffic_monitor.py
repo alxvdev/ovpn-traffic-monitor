@@ -296,22 +296,24 @@ class OpenVPNUserManager:
 			except IOError:
 				self.logger.log(f'Error: Could not write to {self.config.USERS_JSON_FILE}', 'error')
 
-		return users
+		return self.users_data
 
 	async def update_user_monitoring(self) -> None:
 		"""
 		Update the tcpdump monitoring for users
 		"""
-		users = self.update_user_data(self.parse_openvpn_users())
+		users_list = self.parse_openvpn_users()
+		users_data = self.update_user_data()
 
-		for user in users:
-			virtual_ip = user[0]
-			common_name = user[1]
-			real_ip = user[2]
+		for user in users_list:
+			real_ip = users_list[2]
+			virtual_ip = users_data['virtual_ip']
+			common_name = users_data['common_name']
+			user_uuid = users_data['uuid']
 
 			if real_ip not in self.tcpdump_manager.active_processes:
 				self.logger.log(f'Starting monitoring for user ({real_ip}/{virtual_ip} - {common_name})', 'info')
-				await asyncio.create_task(self.tcpdump_manager.monitor_user_traffic())
+				await asyncio.create_task(self.tcpdump_manager.monitor_user_traffic(user_uuid, real_ip, virtual_ip))
 
 		for user in users:
 			try:
