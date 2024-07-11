@@ -183,12 +183,13 @@ class TCPDumpManager:
 		print('Start traffic logging')
 
 		while True:
-			output = process.stdout.readline().decode()
+			output = process.stdout.readline()
 
-			if (output == '' and process.poll() is not None) or process_data['real_ip'] not in self.active_processes:
+			if output == b'' and process.poll() is not None:
 				print('Stop monitoring user traffic...')
 				break
 			else:
+				output = output.decode()
 				website = output.split(' ')[4].split('.')
 				website = '.'.join(website[:-1]).strip()
 				print(website)
