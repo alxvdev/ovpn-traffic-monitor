@@ -58,7 +58,7 @@ LOGO = '''
 '''
 
 
-def msg(msg_text: str, msg_type: str) -> str:
+async def msg(msg_text: str, msg_type: str) -> str:
 	msg_type = msg_type.lower()
 	if msg_type == 'info' or msg_type == logging.INFO:
 		message = f'[green]{datetime.datetime.now()}::INFO[/green] -- {msg_text}'
@@ -105,7 +105,7 @@ class TrafficMonitorLogger:
 	Responsible for logging website visits
 	"""
 	@staticmethod
-	def log_website_visit(real_ip: str, virtual_ip: str, user_uuid: str, website: str) -> None:
+	async def log_website_visit(real_ip: str, virtual_ip: str, user_uuid: str, website: str) -> None:
 		"""
 		Log a website visit
 
@@ -137,26 +137,26 @@ class PlainLogger:
 		handler.setFormatter(formatter)
 		self.logger.addHandler(handler)
 
-	def alert(self) -> None:
+	async def alert(self) -> None:
 		print('[yellow]LoggingSystem has been started[/yellow]')
 
-	def get_logger(self) -> logging.Logger:
+	async def get_logger(self) -> logging.Logger:
 		return self.logger
 
-	def log(self, text: str, message_type: str='info'):
+	async def log(self, text: str, message_type: str='info'):
 		message_type = message_type.upper()
 
 		if message_type == logging.INFO or message_type == 'info':
-			msg(text, message_type)
+			await msg(text, message_type)
 			self.logger.info(text)
 		if message_type == logging.WARNING or message_type == 'warning':
-			msg(text, message_type)
+			await msg(text, message_type)
 			self.logger.warning(text)
 		if message_type == logging.ERROR or message_type == 'error':
-			msg(text, message_type)
+			await msg(text, message_type)
 			self.logger.error(text)
 		else:
-			msg(text, message_type)
+			await msg(text, message_type)
 			self.logger.info(text)
 
 
@@ -169,12 +169,12 @@ class TCPDumpManager:
 		self.logger = plain_logger
 		self.config = config
 
-	def get_hostname_from_ip(self, ip_address: str) -> str:
+	async def get_hostname_from_ip(self, ip_address: str) -> str:
 		try:
 			hostname, aliaslist, ipaddrlist = socket.gethostbyaddr(ip_address)
 			return hostname
 		except socket.herror as e:
-			self.logger.log(f'Error resolving hostname for IP Address {ip_address}: {e}', 'warning')
+			await self.logger.log(f'Error resolving hostname for IP Address {ip_address}: {e}', 'warning')
 			return None
 
 	async def traffic_logging(self, process_data: dict) -> None:
@@ -197,8 +197,8 @@ class TCPDumpManager:
 				if website == process_data['virtual_ip']:
 					continue
 
-				print(f'Traffic detected: {process_data["virtual_ip"]} -> {self.get_hostname_from_ip(website)}')
-				TrafficMonitorLogger.log_website_visit(process_data['real_ip'], process_data['virtual_ip'], process_data['uuid'], website)
+				print(f'Traffic detected: {process_data["virtual_ip"]} -> {await self.get_hostname_from_ip(website)}')
+				await TrafficMonitorLogger.log_website_visit(process_data['real_ip'], process_data['virtual_ip'], process_data['uuid'], website)
 
 	async def monitor_user_traffic(self, user_uuid: str, real_ip: str, virtual_ip: str) -> None:
 		"""
@@ -213,10 +213,10 @@ class TCPDumpManager:
 		tcpdump_filter += ')'
 		process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, '-n', tcpdump_filter],
 									stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		self.logger.log(f'Executing a command to monitor network traffic: tcpdump -i {self.config.NETWORK_INTERFACE} -n {tcpdump_filter}', 'info')
+		await self.logger.log(f'Executing a command to monitor network traffic: tcpdump -i {self.config.NETWORK_INTERFACE} -n {tcpdump_filter}', 'info')
 
 		if process.returncode == 1:
-			self.logger.log(f'An error occurred during the command to start the traffic monitoring process: {process.stderr}', 'error')
+			await self.logger.log(f'An error occurred during the command to start the traffic monitoring process: {process.stderr}', 'error')
 			exit(1)
 
 		process_data = {
@@ -233,13 +233,14 @@ class TCPDumpManager:
 		
 		self.active_processes[real_ip] = process_data
 
-	def stop_user_traffic_monitoring(self, user_ip: str) -> None:
+	async def stop_user_traffic_monitoring(self, user_ip: str) -> None:
 		"""
 		Stop monitoring user traffic.
 
 		:param user_ip: User Real IP Address
 		"""
 		if user_ip in self.active_processes:
+			print(f'Stop user traffic monitoring: {user_ip}')
 			process = self.active_processes[user_ip]['process']
 			process.terminate()
 			async_task = self.active_processes[user_ip]['task']
@@ -257,7 +258,7 @@ class OpenVPNUserManager:
 		self.users_data: dict = {}
 		self.logger: PlainLogger = plain_logger
 
-	def parse_openvpn_users(self) -> list:
+	async def parse_openvpn_users(self) -> list:
 		"""
 		Parse the OpenVPN status log and return user information
 		"""
@@ -288,14 +289,14 @@ class OpenVPNUserManager:
 
 			return users
 		except FileNotFoundError:
-			self.logger.log(f'Error: {self.config.OPENVPN_STATUS_FILE} not found.', 'error')
+			await self.logger.log(f'Error: {self.config.OPENVPN_STATUS_FILE} not found.', 'error')
 			exit(1)
 
 		return users
 
 	async def update_user_data(self, users: list=None) -> list:
 		if users is None:
-			users = self.parse_openvpn_users()
+			users = await self.parse_openvpn_users()
 
 		for user in users:
 			self.users_data[user[2]] = {
@@ -309,7 +310,7 @@ class OpenVPNUserManager:
 				with open(self.config.USERS_JSON_FILE, 'w') as f:
 					json.dump(self.users_data, f, indent=4)
 			except IOError:
-				self.logger.log(f'Error: Could not write to {self.config.USERS_JSON_FILE}', 'error')
+				await self.logger.log(f'Error: Could not write to {self.config.USERS_JSON_FILE}', 'error')
 
 		return self.users_data
 
@@ -317,7 +318,7 @@ class OpenVPNUserManager:
 		"""
 		Update the tcpdump monitoring for users
 		"""
-		users_list = self.parse_openvpn_users() # list[list] of users
+		users_list = await self.parse_openvpn_users() # list[list] of users
 		users_data = await self.update_user_data(users_list) # dict of users
 		tasks = []
 
@@ -340,7 +341,7 @@ class OpenVPNUserManager:
 				self.tcpdump_manager.stop_user_traffic_monitoring(user[2])
 
 
-	def add_user(self, real_ip: str, virtual_ip: str, common_name: str) -> None:
+	async def add_user(self, real_ip: str, virtual_ip: str, common_name: str) -> None:
 		"""
 		Add a new user
 
@@ -360,9 +361,9 @@ class OpenVPNUserManager:
 			with open(self.config.USERS_JSON_FILE, 'w') as f:
 				json.dump(self.users_data, f, indent=4)
 		except IOError:
-			self.logger.log(f'Error: Could not write to {self.config.USERS_JSON_FILE}', 'error')
+			await self.logger.log(f'Error: Could not write to {self.config.USERS_JSON_FILE}', 'error')
 
-	def delete_user(self, real_ip: str) -> None:
+	async def delete_user(self, real_ip: str) -> None:
 		"""
 		Delete an existing user
 		"""
@@ -374,7 +375,7 @@ class OpenVPNUserManager:
 				with open(self.config.USERS_JSON_FILE, 'w') as f:
 					json.dump(self.users_data, f, indent=4)
 			except IOError:
-				self.logger.log(f'Error: Could not write to {self.config.USERS_JSON_FILE}', 'error')
+				await self.logger.log(f'Error: Could not write to {self.config.USERS_JSON_FILE}', 'error')
 
 
 async def main():
@@ -398,16 +399,16 @@ async def main():
 
 	if args.add:
 		real_ip, virt_ip, common_name = args.add
-		openvpn_user_manager.add_user(real_ip, virt_ip, common_name)
+		await openvpn_user_manager.add_user(real_ip, virt_ip, common_name)
 		exit(1)
 	elif args.delete:
-		openvpn_user_manager.delete_user(args.delete)
+		await openvpn_user_manager.delete_user(args.delete)
 		exit(1)
 
 	while True:
 		try:
-			openvpn_user_manager.update_user_monitoring()
-			openvpn_user_manager.update_user_data()
+			await openvpn_user_manager.update_user_monitoring()
+			await openvpn_user_manager.update_user_data()
 
 			print(openvpn_user_manager.users_data)
 			print()
