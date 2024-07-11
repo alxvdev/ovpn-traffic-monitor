@@ -188,14 +188,13 @@ class TCPDumpManager:
 				break
 			else:
 				output = output.decode()
-				website = output.split(' ')[4]
-				# website = output.split(' ')[4].split('.')
-				# website = '.'.join(website[:-1]).strip()
+				website = output.split(' ')[4].split('.')
+				website = '.'.join(website[:-1]).strip()
 				
 				if website == process_data['virtual_ip']:
 					continue
 
-				print(f'Traffic detected: {process_data["virtual_ip"]} -> {website}')
+				print(f'Traffic detected: {process_data["virtual_ip"]} -> {self.get_hostname_from_ip(website)}')
 				TrafficMonitorLogger.log_website_visit(process_data['real_ip'], process_data['virtual_ip'], process_data['uuid'], website)
 
 	async def monitor_user_traffic(self, user_uuid: str, real_ip: str, virtual_ip: str) -> None:
@@ -206,9 +205,9 @@ class TCPDumpManager:
 		:param real_ip: user real IP Address
 		:param virtual_ip: user virtual IP Address
 		"""
-		tcpdump_filter = f'src {virtual_ip} or '
-		tcpdump_filter += ' or host '.join(self.config.MONITORING_SITES)
-		process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, tcpdump_filter],
+		tcpdump_filter = f'src {virtual_ip}'
+		# tcpdump_filter += ' or host '.join(self.config.MONITORING_SITES)
+		process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, '-n', tcpdump_filter],
 									stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		self.logger.log(f'Executing a command to monitor network traffic: tcpdump -i {self.config.NETWORK_INTERFACE} -n {tcpdump_filter}', 'info')
 
