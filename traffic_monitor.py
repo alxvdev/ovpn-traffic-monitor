@@ -409,6 +409,9 @@ async def main():
 			await asyncio.create_task(openvpn_user_manager.update_user_monitoring())
 			await openvpn_user_manager.update_user_data()
 
+			print(openvpn_user_manager.users_data)
+			print()
+
 			# if len(tcpdump_manager.active_processes) > 0:
 			# 	print(f'Active processes: {tcpdump_manager.active_processes}')
 
