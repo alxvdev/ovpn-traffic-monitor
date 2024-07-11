@@ -403,9 +403,6 @@ async def main():
 	elif args.delete:
 		openvpn_user_manager.delete_user(args.delete)
 		exit(1)
-	else:
-		await asyncio.create_task(openvpn_user_manager.update_user_monitoring())
-		await openvpn_user_manager.update_user_data()
 
 	while True:
 		try:
