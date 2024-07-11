@@ -174,7 +174,7 @@ class TCPDumpManager:
 			hostname, aliaslist, ipaddrlist = socket.gethostbyaddr(ip_address)
 			return hostname
 		except socket.herror as e:
-			self.logger.log(f'Error resolving hostname for IP Address {ip_address}: {e}', 'error')
+			self.logger.log(f'Error resolving hostname for IP Address {ip_address}: {e}', 'warning')
 			return None
 
 	async def traffic_logging(self, process_data: dict) -> None:
@@ -195,9 +195,6 @@ class TCPDumpManager:
 				if website == process_data['virtual_ip']:
 					continue
 
-				print(website)
-				print(self.get_hostname_from_ip(website))
-				print(self.get_hostname_from_ip(website) == 'www.google.ru')
 				try:
 					print('google' in self.get_hostname_from_ip(website))
 				except Exception as ex:
@@ -214,8 +211,9 @@ class TCPDumpManager:
 		:param real_ip: user real IP Address
 		:param virtual_ip: user virtual IP Address
 		"""
-		tcpdump_filter = f'src {virtual_ip}'
-		process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, '-n', tcpdump_filter],
+		tcpdump_filter = f'src {virtual_ip} '
+		tcpdump_filter = ' or '.join(self.config.MONITORING_SITES)
+		process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, tcpdump_filter],
 									stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		self.logger.log(f'Executing a command to monitor network traffic: tcpdump -i {self.config.NETWORK_INTERFACE} -n {tcpdump_filter}', 'info')
 
