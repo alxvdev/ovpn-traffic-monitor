@@ -51,7 +51,7 @@ verb 4
 Clone repo and launch script:
 
 ```bash
-git clone https://github.com/alxvdev/ovpn-traffic-monitor
+git clone https://github.com/alxvdev/ovpn-traffic-monitor ~/ovpn-traffic-monitor
 cd ovpn-traffic-monitor
 chmod +x install.sh
 ./install.sh
