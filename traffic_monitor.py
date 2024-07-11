@@ -198,7 +198,10 @@ class TCPDumpManager:
 				print(website)
 				print(self.get_hostname_from_ip(website))
 				print(self.get_hostname_from_ip(website) == 'www.google.ru')
-				print('google' in self.get_hostname_from_ip(website))
+				try:
+					print('google' in self.get_hostname_from_ip(website))
+				except Exception as ex:
+					pass
 
 				print(f'Traffic detected: {process_data["virtual_ip"]} -> {website}')
 				TrafficMonitorLogger.log_website_visit(process_data['real_ip'], process_data['virtual_ip'], process_data['uuid'], website)
