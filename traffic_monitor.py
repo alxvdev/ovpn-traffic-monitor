@@ -395,6 +395,7 @@ async def main():
 			await asyncio.create_task(openvpn_user_manager.update_user_monitoring())
 			openvpn_user_manager.update_user_data()
 
+			print(tcpdump_manager.active_processes)
 			# for real_ip, user_data in tcpdump_manager.active_processes.items():
 			# 	virtual_ip = user_data['virtual_ip']
 			# 	uuid = user_data['user_uuid']

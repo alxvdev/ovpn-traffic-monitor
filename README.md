@@ -38,6 +38,12 @@ network_interface=tun0
 monitoring_sites=bbc.com,www.google.ru
 ```
 
+Create this and launch:
+
+```bash
+python3 traffic_monitor.py --config /path/to/config.ini
+```
+
 ## Installing
 Add/edit this strings to `/etc/openvpn/server.conf`:
 
