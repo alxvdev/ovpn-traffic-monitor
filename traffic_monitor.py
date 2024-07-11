@@ -307,9 +307,9 @@ class OpenVPNUserManager:
 
 		for user in users_list:
 			real_ip = users_list[2]
-			virtual_ip = users_data['virtual_ip']
-			common_name = users_data['common_name']
-			user_uuid = users_data['uuid']
+			virtual_ip = users_data[real_ip]['virtual_ip']
+			common_name = users_data[real_ip]['common_name']
+			user_uuid = users_data[real_ip]['uuid']
 
 			if real_ip not in self.tcpdump_manager.active_processes:
 				self.logger.log(f'Starting monitoring for user ({real_ip}/{virtual_ip} - {common_name})', 'info')
