@@ -173,7 +173,7 @@ class TCPDumpManager:
 		try:
 			hostname, aliaslist, ipaddrlist = socket.gethostbyaddr(ip_address)
 			return hostname
-		except socket.herrr as e:
+		except socket.herror as e:
 			self.logger.log(f'Error resolving hostname for IP Address {ip_address}: {e}', 'error')
 			return None
 
@@ -407,8 +407,8 @@ async def main():
 			await asyncio.create_task(openvpn_user_manager.update_user_monitoring())
 			await openvpn_user_manager.update_user_data()
 
-			if len(tcpdump_manager.active_processes) > 0:
-				print(f'Active processes: {tcpdump_manager.active_processes}')
+			# if len(tcpdump_manager.active_processes) > 0:
+			# 	print(f'Active processes: {tcpdump_manager.active_processes}')
 
 			# for real_ip, user_data in tcpdump_manager.active_processes.items():
 			# 	virtual_ip = user_data['virtual_ip']
