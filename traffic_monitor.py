@@ -180,6 +180,8 @@ class TCPDumpManager:
 	async def traffic_logging(self, process_data: dict) -> None:
 		process = process_data['process']
 
+		print('Start traffic logging')
+
 		while True:
 			output = process.stdout.readline().decode()
 
