@@ -406,8 +406,8 @@ async def main():
 
 	while True:
 		try:
-			await asyncio.create_task(openvpn_user_manager.update_user_monitoring())
-			await openvpn_user_manager.update_user_data()
+			openvpn_user_manager.update_user_monitoring()
+			openvpn_user_manager.update_user_data()
 
 			print(openvpn_user_manager.users_data)
 			print()
