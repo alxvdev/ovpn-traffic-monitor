@@ -188,8 +188,11 @@ class TCPDumpManager:
 				break
 			else:
 				output = output.decode()
-				website = output.split(' ')[4].split('.')
-				website = '.'.join(website[:-1]).strip()
+				try:
+					website = output.split(' ')[4].split('.')
+					website = '.'.join(website[:-1]).strip()
+				except:
+					continue
 				
 				if website == process_data['virtual_ip']:
 					continue
@@ -205,8 +208,9 @@ class TCPDumpManager:
 		:param real_ip: user real IP Address
 		:param virtual_ip: user virtual IP Address
 		"""
-		tcpdump_filter = f'src {virtual_ip}'
-		# tcpdump_filter += ' or host '.join(self.config.MONITORING_SITES)
+		tcpdump_filter = f'src {virtual_ip} and ('
+		tcpdump_filter += ' or net '.join(self.config.MONITORING_SITES)
+		tcpdump_filter += ')'
 		process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, '-n', tcpdump_filter],
 									stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		self.logger.log(f'Executing a command to monitor network traffic: tcpdump -i {self.config.NETWORK_INTERFACE} -n {tcpdump_filter}', 'info')
