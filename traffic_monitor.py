@@ -330,6 +330,8 @@ class OpenVPNUserManager:
 				self.logger.log(f'Starting monitoring for user ({real_ip}/{virtual_ip} - {common_name})', 'info')
 				await self.tcpdump_manager.monitor_user_traffic(user_uuid, real_ip, virtual_ip)
 				print('Wait...')
+			else:
+				print('no')
 
 		for user in users_list:
 			try:
