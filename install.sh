@@ -21,11 +21,12 @@ if ! [ -f /etc/lsb-release ] || ! grep -q "DISTRIB_ID=Ubuntu" /etc/lsb-release; 
 	exit 1
 fi
 
-
 if [[ $EUID -ne 0 ]]; then
 	echo -e "${RED}This script requires superuser privileges. Run it with 'sudo'.${PLAIN}"
 	exit 1
 fi
+
+echo -e "${YELLOW}Install ovpn-traffic-monitor${PLAIN}"
 
 echo -e "${BLUE}Updating package lists...${PLAIN}"
 apt update -qq > /dev/null 2>&1
