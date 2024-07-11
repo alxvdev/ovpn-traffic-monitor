@@ -206,7 +206,7 @@ class TCPDumpManager:
 		:param real_ip: user real IP Address
 		:param virtual_ip: user virtual IP Address
 		"""
-		tcpdump_filter = f'src {virtual_ip} and host '
+		tcpdump_filter = f'src {virtual_ip} or '
 		tcpdump_filter += ' or host '.join(self.config.MONITORING_SITES)
 		process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, tcpdump_filter],
 									stdout=subprocess.PIPE, stderr=subprocess.PIPE)
