@@ -410,6 +410,7 @@ def main():
 			openvpn_user_manager.update_user_monitoring()
 			openvpn_user_manager.update_user_data()
 		except KeyboardInterrupt:
+			print('[yellow]Get KeyboardInterrupt: stop...[/yellow]')
 			break 
 		except Exception as ex:
 			logger.log(f'Error: {ex}', 'error')
