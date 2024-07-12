@@ -229,12 +229,14 @@ class TCPDumpManager:
 		}
 
 		thread_monitor = Thread(target=self.traffic_logging, args=(process_data,))
-		thread_monitor.start()
-		thread_monitor.join()
+		self.logger.log(f'Start user traffic monitoring thread ({user_uuid})', 'debug')
 
 		process_data['thread'] = thread_monitor
 
 		self.active_processes[real_ip] = process_data
+
+		thread_monitor.start()
+		thread_monitor.join()
 
 	def stop_user_traffic_monitoring(self, user_ip: str) -> None:
 		"""
@@ -243,9 +245,13 @@ class TCPDumpManager:
 		:param user_ip: User Real IP Address
 		"""
 		if user_ip in self.active_processes:
-			print(f'Stop user traffic monitoring: {user_ip}')
+			self.logger.log(f'Stop user traffic monitoring: {user_ip}', 'info')
 			process = self.active_processes[user_ip]['process']
 			process.terminate()
+			self.logger.log(f'Terminated user traffic monitoring process ({user_ip})', 'debug')
+			thread = self.active_processes[user_ip]['thread']
+			thread.stop()
+			self.logger.log(f'Stopped user traffic monitoring thread ({user_ip})', 'debug')
 			del self.active_processes[user_ip]
 
 
@@ -262,6 +268,8 @@ class OpenVPNUserManager:
 	def parse_openvpn_users(self) -> list:
 		"""
 		Parse the OpenVPN status log and return user information
+
+		:return: List of users
 		"""
 		lines = []
 		result = []
@@ -296,6 +304,13 @@ class OpenVPNUserManager:
 		return users
 
 	def update_user_data(self, users: list=None) -> list:
+		"""
+		Update user JSON data
+
+		:param users: Users list (if is None, parse users)
+
+		:return: List of users
+		"""
 		if users is None:
 			users = self.parse_openvpn_users()
 
@@ -362,12 +377,17 @@ class OpenVPNUserManager:
 				json.dump(self.users_data, f, indent=4)
 		except IOError:
 			self.logger.log(f'Error: Could not write to {self.config.USERS_JSON_FILE}', 'error')
+		else:
+			self.logger.log(f'User {real_ip}/{virtual_ip} has been created', 'debug')
 
 	def delete_user(self, real_ip: str) -> None:
 		"""
 		Delete an existing user
+
+		:param real_ip: user real ip address
 		"""
 		if real_ip in self.users_data:
+			self.logger.log(f'User {real_ip} has been deleted', 'debug')
 			self.tcpdump_manager.stop_user_traffic_monitoring(real_ip)
 			del self.users_data[real_ip]
 
@@ -407,8 +427,13 @@ def main():
 
 	while True:
 		try:
-			openvpn_user_manager.update_user_monitoring()
-			openvpn_user_manager.update_user_data()
+			thr_user_mon = Thread(target=openvpn_user_manager.update_user_monitoring)
+			thr_user_data = Thread(target=openvpn_user_manager.update_user_data)
+
+			thr_user_mon.start()
+			thr_user_mon.join()
+			thr_user_data.start()
+			thr_user_data.join()
 		except KeyboardInterrupt:
 			print('[yellow]Get KeyboardInterrupt: stop...[/yellow]')
 			break 
