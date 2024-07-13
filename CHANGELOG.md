@@ -1,3 +1,9 @@
+commit 6c2979f57b94e20f8367e4f993e4b0230ad0139d
+Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Sat Jul 13 22:27:00 2024 +0700
+
+    fix: fix small bugs
+
 commit af89c62fe71a2cb6969bafe472abce35464a9df0
 Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
 Date:   Fri Jul 12 23:27:32 2024 +0700

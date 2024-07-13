@@ -94,3 +94,5 @@ case "$1" in
 		check_service_status
 		;;
 esac
+
+echo -e "\n${GREEN}${DIM}Flags: --install; --restart; --stop; --enable; --disable; --get${PLAIN}"
