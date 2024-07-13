@@ -59,6 +59,14 @@ LOGO = '''
 
 
 def msg(msg_text: str, msg_type: str) -> str:
+	"""
+	Print message withour logging
+
+	:param msg_text: Text of message
+	:param msg_type: Type of message
+
+	:return: Message with rich formatting
+	"""
 	msg_type = msg_type.lower()
 	if msg_type == 'info' or msg_type == logging.INFO:
 		message = f'[green]{datetime.datetime.now()}::INFO[/green] -- {msg_text}'
@@ -131,6 +139,12 @@ class PlainLogger:
 	Plain Logger system
 	"""
 	def __init__(self, logfilename: str, formatting: str):
+		"""
+		PlainLogger initialization
+
+		:param logfilename: Logfile path
+		:param formatting: Formatting string
+		"""
 		self.logfilename = logfilename
 		self.logger = logging.getLogger(__name__)
 		self.logger.setLevel(logging.DEBUG)
@@ -141,13 +155,19 @@ class PlainLogger:
 		handler.setFormatter(formatter)
 		self.logger.addHandler(handler)
 
-	def alert(self) -> None:
-		print('[yellow]LoggingSystem has been started[/yellow]')
-
 	def get_logger(self) -> logging.Logger:
+		"""
+		Get logger object
+		"""
 		return self.logger
 
 	def log(self, text: str, message_type: str='info'):
+		"""
+		Logging messages
+
+		:param text: Text of message
+		:param message_type: Type of message (info, warning, error or other)
+		"""
 		message_type = message_type.upper()
 
 		if message_type == logging.INFO or message_type == 'info':
@@ -169,19 +189,37 @@ class TCPDumpManager:
 	Manages the tcpdump processes for monitoring user traffic
 	"""
 	def __init__(self, plain_logger: PlainLogger, config: Config):
+		"""
+		Initialization TCPDump Manager
+
+		:param plain_logger: PlainLogger object
+		:param config: Config object
+		"""
 		self.active_processes: dict = {}
 		self.logger = plain_logger
 		self.config = config
 
 	def get_hostname_from_ip(self, ip_address: str) -> str:
+		"""
+		Get hostname by ip address
+
+		:param ip_address: IP Address of server for resolving hostname
+
+		:return: Hostname or N/A
+		"""
 		try:
 			hostname, aliaslist, ipaddrlist = socket.gethostbyaddr(ip_address)
 			return hostname
 		except socket.herror as e:
 			self.logger.log(f'Error resolving hostname for IP Address {ip_address}: {e}', 'warning')
-			return None
+			return "N/A"
 
 	def traffic_logging(self, process_data: dict) -> None:
+		"""
+		Method for traffic logging.
+
+		:param process_data: Dictionary with process, user virtual ip, user real ip and user uuid
+		"""
 		process = process_data['process']
 
 		try:
@@ -202,10 +240,10 @@ class TCPDumpManager:
 					if website == process_data['virtual_ip']:
 						continue
 
-					print(f'Traffic detected: {process_data["virtual_ip"]} -> {self.get_hostname_from_ip(website)}')
-					TrafficMonitorLogger.log_website_visit(process_data['real_ip'], process_data['virtual_ip'], process_data['uuid'], website)
+				print(f'Traffic detected: {process_data["virtual_ip"]} -> {self.get_hostname_from_ip(website)} ({self.get_hostname_from_ip(website)})')
+					TrafficMonitorLogger.log_website_visit(process_data['real_ip'], process_data['virtual_ip'], process_data['uuid'], f'{website}/{self.get_hostname_from_ip(website)}')
 		except Exception as ex:
-			msg(f'Error occurred during the operation of the traffic logging thread (uncritical, but atypical)', 'warning')
+			self.logger.log(f'Error occurred during the operation of the traffic logging thread (uncritical, but atypical)', 'warning')
 			return
 
 		return
@@ -247,7 +285,7 @@ class TCPDumpManager:
 			thread_monitor.start()
 			thread_monitor.join()
 		except Exception as ex:
-			msg(f'Error occurred when start monitor user traffic thread: {ex}', 'error')
+			self.logger.log(f'Error occurred when start monitor user traffic thread: {ex}', 'error')
 
 	def stop_user_traffic_monitoring(self, user_ip: str) -> None:
 		"""
@@ -363,7 +401,7 @@ class OpenVPNUserManager:
 					thread_monitor.start()
 					thread_monitor.join()
 		except Exception as ex:
-			msg(f'Error when start active user monitoring threads: {ex}', 'error')
+			self.logger.log(f'Error when start active user monitoring threads: {ex}', 'error')
 			exit(1)
 
 		try:
@@ -374,7 +412,7 @@ class OpenVPNUserManager:
 				except KeyError:
 					self.tcpdump_manager.stop_user_traffic_monitoring(user[2])
 		except Exception as ex:
-			msg(f'Error when stop inactive user monitoring threads: {ex}', 'error')
+			self.logger.log(f'Error when stop inactive user monitoring threads: {ex}', 'error')
 			exit(1)
 
 
@@ -453,23 +491,23 @@ def main():
 
 	logger.log(f'Config: {args.config}', 'debug')
 
-	msg('Load TCPDump Manager module...', 'debug')
+	logger.log('Load TCPDump Manager module...', 'debug')
 	try:
 		tcpdump_manager = TCPDumpManager(logger, config)
 	except Exception as ex:
-		msg(f'Fail to load TCPDump Manager module: {ex}', 'error')
+		logger.log(f'Fail to load TCPDump Manager module: {ex}', 'error')
 		exit(1)
 	else:
-		msg('Successfully load TCPDump Manager Module!', 'info')
+		logger.log('Successfully load TCPDump Manager Module!', 'info')
 
-	msg('Load OpenVPN User Manager module...', 'debug')
+	logger.log('Load OpenVPN User Manager module...', 'debug')
 	try:
 		openvpn_user_manager = OpenVPNUserManager(tcpdump_manager, config, logger)
 	except Exception as ex:
-		msg(f'Fail to load OpenVPN User Manager module: {ex}', 'error')
+		logger.log(f'Fail to load OpenVPN User Manager module: {ex}', 'error')
 		exit(1)
 	else:
-		msg('Successfully load OpenVPN User Manager Module!', 'info')
+		logger.log('Successfully load OpenVPN User Manager Module!', 'info')
 
 	if args.add:
 		real_ip, virt_ip, common_name = args.add
@@ -479,25 +517,25 @@ def main():
 		openvpn_user_manager.delete_user(args.delete)
 		exit(1)
 
-	msg('Initial update user monitoring', 'debug')
+	logger.log('Initial update user monitoring', 'debug')
 	try:
 		openvpn_user_manager.update_user_monitoring()
 	except Exception as ex:
-		msg(f'Error occurred when update user monitoring: {ex} ', 'error')
+		logger.log(f'Error occurred when update user monitoring: {ex} ', 'error')
 		exit(1)
 	else:
-		msg('Successfully updated!', 'info')
+		logger.log('Successfully updated!', 'info')
 
-	msg('Initial update user data', 'debug')
+	logger.log('Initial update user data', 'debug')
 	try:
 		openvpn_user_manager.update_user_data()
 	except Exception as ex:
-		msg(f'Error occurred when update user data: {ex} ', 'error')
+		logger.log(f'Error occurred when update user data: {ex} ', 'error')
 		exit(1)
 	else:
-		msg('Successfully updated!', 'info')
+		logger.log('Successfully updated!', 'info')
 
-	msg('Start program loop...', 'debug')
+	logger.log('Start program loop...', 'debug')
 	while True:
 		try:
 			openvpn_user_manager.update_user_monitoring()
@@ -509,7 +547,7 @@ def main():
 			logger.log(f'Error: {ex}', 'error')
 			break
 
-	msg('Stop program loop...', 'debug')
+	logger.log('Stop program loop...', 'debug')
 
 
 if __name__ == '__main__':
