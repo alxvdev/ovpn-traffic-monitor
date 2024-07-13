@@ -1,3 +1,9 @@
+commit af89c62fe71a2cb6969bafe472abce35464a9df0
+Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Fri Jul 12 23:27:32 2024 +0700
+
+    style/fix: major update, fix bugs, improve code style and comments/docs
+
 commit bb079f665e03780dfa453c9c786050d9fa1da9ce
 Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
 Date:   Fri Jul 12 20:40:51 2024 +0700

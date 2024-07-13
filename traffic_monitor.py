@@ -83,8 +83,12 @@ class Config:
 			msg(f'Configuration file "{config_file}" does not exist', 'error')
 			exit(1)
 
-		self.config = ConfigParser()
-		self.config.read(config_file)
+		try:
+			self.config = ConfigParser()
+			self.config.read(config_file)
+		except Exception as ex:
+			msg(f'Error occurred when reading config file {config_file}: {ex}', 'error')
+			exit(1)
 
 		# Paths
 		self.OPENVPN_STATUS_FILE = self.config.get('PATHS', 'openvpn_status_file')
@@ -414,6 +418,8 @@ def main():
 	config = Config(args.config)
 	logger = PlainLogger(config.LOG_FILEPATH, config.LOG_FORMAT)
 
+	logger.log(f'Config: {args.config}', 'debug')
+
 	tcpdump_manager = TCPDumpManager(logger, config)
 	openvpn_user_manager = OpenVPNUserManager(tcpdump_manager, config, logger)
 
@@ -425,18 +431,17 @@ def main():
 		openvpn_user_manager.delete_user(args.delete)
 		exit(1)
 
+	msg('Update user monitoring and update user data', 'debug')
+	openvpn_user_manager.update_user_monitoring()
+	openvpn_user_manager.update_user_data()
+
 	while True:
 		try:
-			thr_user_mon = Thread(target=openvpn_user_manager.update_user_monitoring)
-			thr_user_data = Thread(target=openvpn_user_manager.update_user_data)
-
-			thr_user_mon.start()
-			thr_user_mon.join()
-			thr_user_data.start()
-			thr_user_data.join()
+			openvpn_user_manager.update_user_monitoring()
+			openvpn_user_manager.update_user_data()
 		except KeyboardInterrupt:
 			print('[yellow]Get KeyboardInterrupt: stop...[/yellow]')
-			break 
+			break
 		except Exception as ex:
 			logger.log(f'Error: {ex}', 'error')
 			break
