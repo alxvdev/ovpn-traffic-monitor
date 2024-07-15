@@ -256,12 +256,10 @@ class TCPDumpManager:
 		:param virtual_ip: user virtual IP Address
 		"""
 		try:
-			tcpdump_filter = f'src {virtual_ip} and (net '
-			tcpdump_filter += ' or net '.join(self.config.MONITORING_SITES)
-			tcpdump_filter += ')'
-			process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, '-n', tcpdump_filter],
+			tcpdump_filter = f'src {virtual_ip}'
+			process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, '-U' '-n', tcpdump_filter],
 										stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-			self.logger.log(f'Executing a command to monitor network traffic: tcpdump -i {self.config.NETWORK_INTERFACE} -n {tcpdump_filter}', 'info')
+			self.logger.log(f'Executing a command to monitor network traffic: tcpdump -i {self.config.NETWORK_INTERFACE} -U -n {tcpdump_filter}', 'info')
 
 			if process.returncode == 1:
 				self.logger.log(f'An error occurred during the command to start the traffic monitoring process: {process.stderr}', 'error')
@@ -275,14 +273,17 @@ class TCPDumpManager:
 			}
 
 			thread_monitor = Thread(target=self.traffic_logging, args=(process_data,))
-			self.logger.log(f'Start user traffic monitoring thread ({user_uuid})', 'debug')
+
+			try:
+				thread_monitor.start()
+				thread_monitor.join()
+			except Exception as ex:
+				self.logger.log(f'Warning (must be error) occurred when starting thread: {ex}', 'warning')
+			else:
+				self.logger.log(f'Start user traffic monitoring thread ({user_uuid}) successfully', 'debug')
 
 			process_data['thread'] = thread_monitor
-
 			self.active_processes[real_ip] = process_data
-
-			thread_monitor.start()
-			thread_monitor.join()
 		except Exception as ex:
 			self.logger.log(f'Error occurred when start monitor user traffic thread: {ex}', 'error')
 
@@ -293,14 +294,17 @@ class TCPDumpManager:
 		:param user_ip: User Real IP Address
 		"""
 		if user_ip in self.active_processes:
-			self.logger.log(f'Stop user traffic monitoring: {user_ip}', 'info')
-			process = self.active_processes[user_ip]['process']
-			process.terminate()
-			self.logger.log(f'Terminated user traffic monitoring process ({user_ip})', 'debug')
-			thread = self.active_processes[user_ip]['thread']
-			thread.stop()
-			self.logger.log(f'Stopped user traffic monitoring thread ({user_ip})', 'debug')
-			del self.active_processes[user_ip]
+			try:
+				self.logger.log(f'Stop user traffic monitoring: {user_ip}', 'info')
+				process = self.active_processes[user_ip]['process']
+				process.terminate()
+				self.logger.log(f'Terminated user traffic monitoring process ({user_ip})', 'debug')
+				thread = self.active_processes[user_ip]['thread']
+				thread.stop()
+				self.logger.log(f'Stopped user traffic monitoring thread ({user_ip})', 'debug')
+				del self.active_processes[user_ip]
+			except Exception as ex:
+				self.logger.log(f'Error occurred when stopping user traffic monitoring: {ex}', 'warning')
 
 
 class OpenVPNUserManager:
