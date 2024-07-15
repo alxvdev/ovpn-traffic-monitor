@@ -1,3 +1,15 @@
+commit a38962c98cdf23317897d7356aedd6bb4c580ffa
+Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Mon Jul 15 13:36:41 2024 +0700
+
+    refactor: improved error handling
+
+commit 9c8cae6fb973fa42b09f170756eb27fe43444df9
+Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Mon Jul 15 13:29:47 2024 +0700
+
+    fix/refactor/feat: fix errors, improve error handlers, edit bash scripts
+
 commit 54e42d1d7684546b51dbc339bd30d1f350c4a60b
 Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
 Date:   Sat Jul 13 22:52:43 2024 +0700

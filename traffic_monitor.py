@@ -38,6 +38,9 @@ from pathlib import Path
 from configparser import ConfigParser
 from rich import print
 
+from modules.exceptions_logging import IOException, ThreadException, ClassObjectException
+from modules.exceptions_logging import ExceptionLevel
+
 LOGO = '''
 [blue]  ____              _   _____  _  __    [/blue][green bold]ovpn-traffic-monitor[/green bold]
 [blue] / __ \\___  ___ ___| | / / _ \\/ |/ /    [/blue][dim italic]script for managing openvpn users[/dim italic]
@@ -84,7 +87,7 @@ class Config:
 			self.config = ConfigParser()
 			self.config.read(config_file)
 		except Exception as ex:
-			msg(f'Error occurred when reading config file {config_file}: {ex}', 'error')
+			IOException('Error occured when reading config file', f"Config file: {config_file}. Error: {ex}", ExceptionLevel.EXCEPTION_CRITICAL_LEVEL)
 			exit(1)
 
 		# Paths
@@ -116,7 +119,7 @@ class TrafficMonitorLogger:
 	Responsible for logging website visits
 	"""
 	@staticmethod
-	def log_website_visit(real_ip: str, virtual_ip: str, user_uuid: str, website: str) -> None:
+	def log_website_visit(traffic_log_filepath: str, real_ip: str, virtual_ip: str, user_uuid: str, website: str) -> None:
 		"""
 		Log a website visit
 
@@ -129,8 +132,11 @@ class TrafficMonitorLogger:
 		log_entry = f'[{timestamp}] {user_uuid} ({virtual_ip}/{real_ip}) visited the site {website}'
 		print(log_entry)
 
-		with open(Config().TRAFFIC_LOG, 'a') as file:
-			file.write(f'{log_entry}\n')
+		try:
+			with open(traffic_log_filepath, 'a') as file:
+				file.write(f'{log_entry}\n')
+		except Exception as ex:
+			IOException('Exception occured when reading config file (and log website visit)', f"Traffic log file: {traffic_log_filepath}. Error: {ex}", ExceptionLevel.EXCEPTION_WARNING_LEVEL)
 
 
 class PlainLogger:
@@ -220,9 +226,9 @@ class TCPDumpManager:
 		:param process_data: Dictionary with process, user virtual ip, user real ip and user uuid
 		"""
 		process = process_data['process']
-
-		try:
-			while True:
+		
+		while True:
+			try:
 				output = process.stdout.readline()
 
 				if output == b'' and process.poll() is not None:
@@ -240,10 +246,10 @@ class TCPDumpManager:
 						continue
 
 				print(f'Traffic detected {process_data["uuid"]}: {process_data["virtual_ip"]}/{process_data["real_ip"]} -> {self.get_hostname_from_ip(website)} ({self.get_hostname_from_ip(website)})')
-				TrafficMonitorLogger.log_website_visit(process_data['real_ip'], process_data['virtual_ip'], process_data['uuid'], f'{website}/{self.get_hostname_from_ip(website)}')
-		except Exception:
-			self.logger.log('Error occurred during the operation of the traffic logging thread (uncritical, but atypical)', 'warning')
-			return
+				TrafficMonitorLogger.log_website_visit(self.config.TRAFFIC_LOG, process_data['real_ip'], process_data['virtual_ip'], process_data['uuid'], f'{website}/{self.get_hostname_from_ip(website)}')
+			except Exception as ex:
+				ThreadException('Error occurred during the operation of the traffic logging thread (uncritical, but atypical)', f'Error: {ex}', ExceptionLevel.EXCEPTION_WARNING_LEVEL)
+				return
 
 		return
 
@@ -256,7 +262,9 @@ class TCPDumpManager:
 		:param virtual_ip: user virtual IP Address
 		"""
 		try:
-			tcpdump_filter = f'src {virtual_ip}'
+			tcpdump_filter = f'src {virtual_ip} and (net '
+			tcpdump_filter += " or net ".join(self.config.MONITORING_SITES)
+			tcpdump_filter += ')'
 			process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, '-U' '-n', tcpdump_filter],
 										stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 			self.logger.log(f'Executing a command to monitor network traffic: tcpdump -i {self.config.NETWORK_INTERFACE} -U -n {tcpdump_filter}', 'info')
@@ -340,8 +348,9 @@ class OpenVPNUserManager:
 				with open(self.config.OPENVPN_STATUS_FILE, 'r') as file:
 					for line in file.read().strip().split('\n'):
 						lines.append(line)
-			except FileNotFoundError:
+			except FileNotFoundError as ex:
 				self.logger.log(f'File not found: {self.config.OPENVPN_STATUS_FILE}', 'error')
+				IOException('Error occured when parsing openvpn users', f"OpenVpn status file: {self.config.OPENVPN_STATUS_FILE}. Error: {ex}", ExceptionLevel.EXCEPTION_ERROR_LEVEL)
 				exit(1)
 			except PermissionError:
 				self.logger.log(f'Permission error: {self.config.OPENVPN_STATUS_FILE}', 'error')
@@ -361,6 +370,9 @@ class OpenVPNUserManager:
 
 			for res_i in result:
 				users.append([user for user in res_i.split(',')])
+
+			if len(users) == 0:
+				print('No users active...')
 
 			return users
 		except Exception as ex:
@@ -389,8 +401,9 @@ class OpenVPNUserManager:
 			}
 
 			try:
-				with open(self.config.USERS_JSON_FILE, 'w') as f:
-					json.dump(self.users_data, f, indent=4)
+				if len(self.users_data) > 0:
+					with open(self.config.USERS_JSON_FILE, 'a') as f:
+						json.dump(self.users_data, f, indent=4)
 			except IOError:
 				self.logger.log(f'Error: Could not write to {self.config.USERS_JSON_FILE}', 'error')
 
@@ -403,8 +416,8 @@ class OpenVPNUserManager:
 		users_list = self.parse_openvpn_users() # list[list] of users
 		users_data = self.update_user_data(users_list) # dict of users
 
-		try:
-			for user in users_list:
+		for user in users_list:
+			try:
 				real_ip = user[2]
 				virtual_ip = users_data[real_ip]['virtual_ip']
 				# common_name = users_data[real_ip]['common_name']
@@ -414,9 +427,9 @@ class OpenVPNUserManager:
 					thread_monitor = Thread(target=self.tcpdump_manager.monitor_user_traffic, args=(user_uuid, real_ip, virtual_ip))
 					thread_monitor.start()
 					thread_monitor.join()
-		except Exception as ex:
-			self.logger.log(f'Error when start active user monitoring threads: {ex}', 'error')
-			exit(1)
+			except Exception as ex:
+				self.logger.log(f'Error when start active user monitoring threads: {ex}', 'error')
+				exit(1)
 
 		try:
 			for user in users_list:
@@ -489,7 +502,7 @@ def main():
 	try:
 		config = Config(args.config)
 	except Exception as ex:
-		msg(f'Fail to load config module: {ex}', 'error')
+		ClassObjectException('Fail to load config module', f'Error: {ex}', ExceptionLevel.EXCEPTION_CRITICAL_LEVEL)
 		exit(1)
 	else:
 		msg('Successfully load Config Module!', 'info')
@@ -498,7 +511,7 @@ def main():
 	try:
 		logger = PlainLogger(config.LOG_FILEPATH, config.LOG_FORMAT)
 	except Exception as ex:
-		msg(f'Fail to load PlainLogger module: {ex}', 'error')
+		ClassObjectException('Fail to load PlainLogger module', f'Error: {ex}', ExceptionLevel.EXCEPTION_CRITICAL_LEVEL)
 		exit(1)
 	else:
 		msg('Successfully load Config Module!', 'info')
@@ -509,6 +522,7 @@ def main():
 	try:
 		tcpdump_manager = TCPDumpManager(logger, config)
 	except Exception as ex:
+		ClassObjectException('Fail to load TCPDump Manager module', f'Error: {ex}', ExceptionLevel.EXCEPTION_CRITICAL_LEVEL)
 		logger.log(f'Fail to load TCPDump Manager module: {ex}', 'error')
 		exit(1)
 	else:
@@ -518,6 +532,7 @@ def main():
 	try:
 		openvpn_user_manager = OpenVPNUserManager(tcpdump_manager, config, logger)
 	except Exception as ex:
+		ClassObjectException('Fail to load OpenVPN User Manager module', f'Error: {ex}', ExceptionLevel.EXCEPTION_CRITICAL_LEVEL)
 		logger.log(f'Fail to load OpenVPN User Manager module: {ex}', 'error')
 		exit(1)
 	else:
