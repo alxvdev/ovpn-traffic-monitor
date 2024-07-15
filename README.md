@@ -35,7 +35,7 @@ log_file=/var/log/wavevpn.log
 
 [MONITOR]
 network_interface=tun0
-monitoring_sites=216.58.207.0/24,151.101.0.0/16,77.88.0.0/16
+monitoring_sites=216.58.207.0/24,151.101.0.0/16,77.88.0.0/16,89.108.99.0/24
 ```
 
 Create this and launch:
@@ -64,3 +64,10 @@ chmod +x install.sh
 ```
 
 All done!
+
+## Scripts
+
+ + `update.sh` - update repository source code and service
+ + `service.sh` - get information about service
+ + `uninstall.sh` - uninstall ovpn-traffic-monitor
+ + `base_config.sh` - generate base configuration file

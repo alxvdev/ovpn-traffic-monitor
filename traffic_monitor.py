@@ -38,17 +38,6 @@ from pathlib import Path
 from configparser import ConfigParser
 from rich import print
 
-
-# First variant
-# LOGO = '''
-# [blue]            .               [/blue][green bold]ovpn-traffic-monitor[/green bold]
-# [blue]       .  ·  `.             [/blue][dim italic]script for managing openvpn users[/dim italic]
-# [blue]  (¯)   :  :  :             [/blue][dim italic]and monitoring their network traffic[/dim italic]
-# [blue]  /¯\\  ´  ·  .´             [/blue][cyan dim]maintained by alxvdev[/cyan dim]
-# [blue] /¯¯¯\\      ´               [/blue][cyan]https://github.com/alxvdev/ovpn-traffic-monitor[/cyan]
-# '''
-
-# Second variant
 LOGO = '''
 [blue]  ____              _   _____  _  __    [/blue][green bold]ovpn-traffic-monitor[/green bold]
 [blue] / __ \\___  ___ ___| | / / _ \\/ |/ /    [/blue][dim italic]script for managing openvpn users[/dim italic]
@@ -103,13 +92,23 @@ class Config:
 		self.USERS_JSON_FILE = self.config.get('PATHS', 'users_file')
 		self.TRAFFIC_LOG = self.config.get('PATHS', 'traffic_monitor_log')
 
+		print(f'OpenVPN Status File: {self.OPENVPN_STATUS_FILE}')
+		print(f'OpenVPN Users JSON Data: {self.USERS_JSON_FILE}')
+		print(f'User traffic log: {self.TRAFFIC_LOG}')
+
 		# Logging
 		self.LOG_FORMAT = "[%(asctime)s %(levelname)s] %(name)s -- %(message)s"
 		self.LOG_FILEPATH = self.config.get('LOGGING', 'log_file')
 
+		print(f'Plain logging format string: {self.LOG_FORMAT}')
+		print(f'Plain log filepath: {self.LOG_FILEPATH}')
+
 		# Monitor
 		self.NETWORK_INTERFACE = self.config.get('MONITOR', 'network_interface')
 		self.MONITORING_SITES = [site.strip() for site in self.config.get('MONITOR', 'monitoring_sites').split(',')]
+
+		print(f'Network interface of OpenVPN: {self.NETWORK_INTERFACE}')
+		print(f'Monitoring sites list: {self.MONITORING_SITES}')
 
 
 class TrafficMonitorLogger:
@@ -240,10 +239,10 @@ class TCPDumpManager:
 					if website == process_data['virtual_ip']:
 						continue
 
-				print(f'Traffic detected: {process_data["virtual_ip"]} -> {self.get_hostname_from_ip(website)} ({self.get_hostname_from_ip(website)})')
-					TrafficMonitorLogger.log_website_visit(process_data['real_ip'], process_data['virtual_ip'], process_data['uuid'], f'{website}/{self.get_hostname_from_ip(website)}')
-		except Exception as ex:
-			self.logger.log(f'Error occurred during the operation of the traffic logging thread (uncritical, but atypical)', 'warning')
+				print(f'Traffic detected {process_data["uuid"]}: {process_data["virtual_ip"]}/{process_data["real_ip"]} -> {self.get_hostname_from_ip(website)} ({self.get_hostname_from_ip(website)})')
+				TrafficMonitorLogger.log_website_visit(process_data['real_ip'], process_data['virtual_ip'], process_data['uuid'], f'{website}/{self.get_hostname_from_ip(website)}')
+		except Exception:
+			self.logger.log('Error occurred during the operation of the traffic logging thread (uncritical, but atypical)', 'warning')
 			return
 
 		return
@@ -309,6 +308,13 @@ class OpenVPNUserManager:
 	Class for managing openvpn users
 	"""
 	def __init__(self, tcpdump_manager: TCPDumpManager, config: Config, plain_logger: PlainLogger):
+		"""
+		Initialization
+
+		:param tcpdump_manager: TCPDump Manager object
+		:param config: Config object
+		:param plain_logger: Plain Logger object
+		"""
 		self.tcpdump_manager: TCPDumpManager = tcpdump_manager
 		self.config: Config = config
 		self.users_data: dict = {}
@@ -326,9 +332,16 @@ class OpenVPNUserManager:
 		include = False
 
 		try:
-			with open(self.config.OPENVPN_STATUS_FILE, 'r') as file:
-				for line in file.read().strip().split('\n'):
-					lines.append(line)
+			try:
+				with open(self.config.OPENVPN_STATUS_FILE, 'r') as file:
+					for line in file.read().strip().split('\n'):
+						lines.append(line)
+			except FileNotFoundError:
+				self.logger.log(f'File not found: {self.config.OPENVPN_STATUS_FILE}', 'error')
+				exit(1)
+			except PermissionError:
+				self.logger.log(f'Permission error: {self.config.OPENVPN_STATUS_FILE}', 'error')
+				exit(1)
 
 			for line in lines:
 				if line == "Virtual Address,Common Name,Real Address,Last Ref":
@@ -346,9 +359,6 @@ class OpenVPNUserManager:
 				users.append([user for user in res_i.split(',')])
 
 			return users
-		except FileNotFoundError:
-			self.logger.log(f'Error: {self.config.OPENVPN_STATUS_FILE} not found.', 'error')
-			exit(1)
 		except Exception as ex:
 			self.logger.log(f'Error when parsing openvpn users: {ex}', 'error')
 			exit(1)
@@ -408,7 +418,7 @@ class OpenVPNUserManager:
 			for user in users_list:
 				try:
 					data = self.tcpdump_manager.active_processes[user[2]]
-					# print(f'User: {data["uuid"]}')
+					self.logger.log(f'User connected ({data["uuid"]}: {data["virtual_ip"]}/{data["real_ip"]}')
 				except KeyError:
 					self.tcpdump_manager.stop_user_traffic_monitoring(user[2])
 		except Exception as ex:

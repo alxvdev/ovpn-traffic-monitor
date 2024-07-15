@@ -1,3 +1,15 @@
+commit 54e42d1d7684546b51dbc339bd30d1f350c4a60b
+Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Sat Jul 13 22:52:43 2024 +0700
+
+    fix/style/docs: replace msg to logger.log and improve docstrings
+
+commit 11f0ac4981d7bcfe4593ade2bcd68d37ce11a880
+Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Sat Jul 13 22:44:49 2024 +0700
+
+    refactor: improved error handling
+
 commit 6c2979f57b94e20f8367e4f993e4b0230ad0139d
 Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
 Date:   Sat Jul 13 22:27:00 2024 +0700
