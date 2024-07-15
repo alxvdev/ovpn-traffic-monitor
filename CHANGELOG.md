@@ -1,3 +1,9 @@
+commit 8bfb9c3d7f477dd72072e5fa96288695f657d136
+Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Mon Jul 15 23:22:58 2024 +0700
+
+    refactor/fix: improved error handling, add custom 'exceptions', improve logging, fix bugs
+
 commit a38962c98cdf23317897d7356aedd6bb4c580ffa
 Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
 Date:   Mon Jul 15 13:36:41 2024 +0700
