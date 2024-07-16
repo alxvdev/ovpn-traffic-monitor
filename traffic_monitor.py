@@ -438,16 +438,16 @@ class OpenVPNUserManager:
 				self.logger.log(f'Error when start active user monitoring threads: {ex}', 'error')
 				exit(1)
 
-		try:
-			for user in users_list:
-				try:
-					data = self.tcpdump_manager.active_processes[user[2]]
-					self.logger.log(f'User connected ({data["uuid"]}): {data["virtual_ip"]}/{data["real_ip"]}')
-				except KeyError:
-					self.tcpdump_manager.stop_user_traffic_monitoring(user[2])
-		except Exception as ex:
-			self.logger.log(f'Error when stop inactive user monitoring threads: {ex}', 'error')
-			exit(1)
+		# try:
+		# 	for user in users_list:
+		# 		try:
+		# 			data = self.tcpdump_manager.active_processes[user[2]]
+		# 			self.logger.log(f'User connected ({data["uuid"]}): {data["virtual_ip"]}/{data["real_ip"]}')
+		# 		except KeyError:
+		# 			self.tcpdump_manager.stop_user_traffic_monitoring(user[2])
+		# except Exception as ex:
+		# 	self.logger.log(f'Error when stop inactive user monitoring threads: {ex}', 'error')
+		# 	exit(1)
 
 
 	def add_user(self, real_ip: str, virtual_ip: str, common_name: str) -> None:
