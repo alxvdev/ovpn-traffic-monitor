@@ -29,7 +29,14 @@ fi
 echo -e "${YELLOW}Update ovpn-traffic-monitor${PLAIN}"
 
 echo -e "${BLUE}Get updates from repository (pull)...${PLAIN}"
-git pull
+
+command=$(git pull)
+
+if [[ "$command" = "Already up to date." ]]; then 
+	echo "${GREEN}All already up to date! Exit...${PLAIN}"
+	exit 0
+fi
+
 if [[ $? -eq 0 ]]; then
 	echo -e "${GREEN}Repository updated successfully.${PLAIN}"
 else
