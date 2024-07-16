@@ -1,3 +1,27 @@
+commit 6d0bd26d3bac503d7452439585e4bb97b6f6274f
+Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Tue Jul 16 21:04:14 2024 +0700
+
+    fix: fix small bug in update script
+
+commit eec98afe645fc7257f3e0ab2586936d29c606e93
+Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Tue Jul 16 21:03:13 2024 +0700
+
+    fix: fix small bug in update script
+
+commit 7dabc1f669ffc19347cd6b22a87ad22027f57c21
+Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Tue Jul 16 20:58:49 2024 +0700
+
+    fix: users json file bugs
+
+commit ecab91093e7e92bd5cbfab4a69d285cb0a4d2715
+Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Tue Jul 16 20:52:25 2024 +0700
+
+    Update Changelog
+
 commit 526e794f0204c2fc19a0b7d40cd1be7e777e065f
 Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
 Date:   Tue Jul 16 20:52:05 2024 +0700
