@@ -410,7 +410,7 @@ class OpenVPNUserManager:
 						json.dump(self.users_data, f, indent=4)
 			except IOError:
 				self.logger.log(f'Error: Could not write to {self.config.USERS_JSON_FILE}', 'error')
-			except Exception:
+			except Exception as ex:
 				self.logger.log(f'Could not write to {self.config.USERS_JSON_FILE}: {ex}', 'error')
 
 		return self.users_data
