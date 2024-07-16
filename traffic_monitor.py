@@ -278,9 +278,8 @@ class TCPDumpManager:
 				'real_ip': real_ip,
 			}
 
-			thread_monitor = Thread(target=self.traffic_logging, args=(process_data,))
-
 			try:
+				thread_monitor = Thread(target=self.traffic_logging, args=(process_data,))
 				thread_monitor.start()
 				thread_monitor.join()
 			except Exception as ex:
@@ -432,8 +431,9 @@ class OpenVPNUserManager:
 				# common_name = users_data[real_ip]['common_name']
 				user_uuid = users_data[real_ip]['uuid']
 
-				if real_ip not in self.tcpdump_manager.active_processes:
-					self.tcpdump_manager.monitor_user_traffic(user_uuid, real_ip, virtual_ip)
+				thr = Thread(target=self.tcpdump_manager.monitor_user_traffic, args=(user_uuid, real_ip, virtual_ip))
+				thr.start()
+				self.logger.log(f'Monitor user traffic: {user_uuid}')
 			except Exception as ex:
 				self.logger.log(f'Error when start active user monitoring threads: {ex}', 'error')
 				exit(1)
@@ -442,7 +442,7 @@ class OpenVPNUserManager:
 			for user in users_list:
 				try:
 					data = self.tcpdump_manager.active_processes[user[2]]
-					self.logger.log(f'User connected ({data["uuid"]}: {data["virtual_ip"]}/{data["real_ip"]}')
+					self.logger.log(f'User connected ({data["uuid"]}): {data["virtual_ip"]}/{data["real_ip"]}')
 				except KeyError:
 					self.tcpdump_manager.stop_user_traffic_monitoring(user[2])
 		except Exception as ex:
