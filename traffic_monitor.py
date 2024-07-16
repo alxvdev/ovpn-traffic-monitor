@@ -496,6 +496,30 @@ class OpenVPNUserManager:
 				self.logger.log(f'Error: Could not write to {self.config.USERS_JSON_FILE}', 'error')
 
 
+def update_user_data_loop():
+	while True:
+		try:
+			openvpn_user_manager.update_user_data()
+		except KeyboardInterrupt:
+			print('[yellow]Get KeyboardInterrupt: stop...[/yellow]')
+			break
+		except Exception as ex:
+			logger.log(f'Error: {ex}', 'error')
+			break
+
+
+def update_user_monitoring_loop():
+	while True:
+		try:
+			openvpn_user_manager.update_user_monitoring()
+		except KeyboardInterrupt:
+			print('[yellow]Get KeyboardInterrupt: stop...[/yellow]')
+			break
+		except Exception as ex:
+			logger.log(f'Error: {ex}', 'error')
+			break
+
+
 def main():
 	"""
 	Main function
@@ -576,17 +600,14 @@ def main():
 		logger.log('Successfully updated!', 'info')
 
 	logger.log('Start program loop...', 'debug')
-	while True:
-		try:
-			openvpn_user_manager.update_user_data()
-			openvpn_user_manager.update_user_monitoring()
-		except KeyboardInterrupt:
-			print('[yellow]Get KeyboardInterrupt: stop...[/yellow]')
-			break
-		except Exception as ex:
-			logger.log(f'Error: {ex}', 'error')
-			break
+	thr = Thread(target=update_user_data_loop)
+	thr2 = Thread(target=update_user_monitoring_loop)
 
+	thr.start()
+	thr2.start()
+
+	thr.join()
+	thr2.join()
 	logger.log('Stop program loop...', 'debug')
 
 
