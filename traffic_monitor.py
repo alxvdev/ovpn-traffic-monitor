@@ -281,7 +281,6 @@ class TCPDumpManager:
 			try:
 				thread_monitor = Thread(target=self.traffic_logging, args=(process_data,))
 				thread_monitor.start()
-				thread_monitor.join()
 			except Exception as ex:
 				self.logger.log(f'Warning (must be error) occurred when starting thread: {ex}', 'warning')
 			else:
