@@ -247,8 +247,6 @@ class TCPDumpManager:
 				ThreadException('Error occurred during the operation of the traffic logging thread (uncritical, but atypical)', f'Error: {ex}', ExceptionLevel.EXCEPTION_WARNING_LEVEL)
 				return
 
-		return
-
 	def monitor_user_traffic(self, user_uuid: str, real_ip: str, virtual_ip: str) -> None:
 		"""
 		Start monitoring user traffic
@@ -432,23 +430,26 @@ class OpenVPNUserManager:
 				# common_name = users_data[real_ip]['common_name']
 				user_uuid = users_data[real_ip]['uuid']
 
+				if real_ip in self.tcpdump_manager.active_processes:
+					continue
 				thr = Thread(target=self.tcpdump_manager.monitor_user_traffic, args=(user_uuid, real_ip, virtual_ip))
 				thr.start()
+				thr.join()
 				self.logger.log(f'Monitor user traffic: {user_uuid}')
 			except Exception as ex:
 				self.logger.log(f'Error when start active user monitoring threads: {ex}', 'error')
 				exit(1)
 
-		# try:
-		# 	for user in users_list:
-		# 		try:
-		# 			data = self.tcpdump_manager.active_processes[user[2]]
-		# 			self.logger.log(f'User connected ({data["uuid"]}): {data["virtual_ip"]}/{data["real_ip"]}')
-		# 		except KeyError:
-		# 			self.tcpdump_manager.stop_user_traffic_monitoring(user[2])
-		# except Exception as ex:
-		# 	self.logger.log(f'Error when stop inactive user monitoring threads: {ex}', 'error')
-		# 	exit(1)
+		try:
+			for user in users_list:
+				try:
+					data = self.tcpdump_manager.active_processes[user[2]]
+					self.logger.log(f'User connected ({data["uuid"]}): {data["virtual_ip"]}/{data["real_ip"]}')
+				except KeyError:
+					self.tcpdump_manager.stop_user_traffic_monitoring(user[2])
+		except Exception as ex:
+			self.logger.log(f'Error when stop inactive user monitoring threads: {ex}', 'error')
+			exit(1)
 
 
 	def add_user(self, real_ip: str, virtual_ip: str, common_name: str) -> None:
