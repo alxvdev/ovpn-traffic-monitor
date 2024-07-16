@@ -232,6 +232,8 @@ class TCPDumpManager:
 				output = process.stdout.readline()
 
 				output = output.decode()
+				print(output)
+
 				try:
 					website = output.split(' ')[4].split('.')
 					website = '.'.join(website[:-1]).strip()
