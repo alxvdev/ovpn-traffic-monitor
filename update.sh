@@ -33,7 +33,7 @@ echo -e "${BLUE}Get updates from repository (pull)...${PLAIN}"
 command=$(git pull)
 
 if [[ "$command" = "Already up to date." ]]; then 
-	echo "${GREEN}All already up to date! Exit...${PLAIN}"
+	echo -e "${GREEN}All already up to date! Exit...${PLAIN}"
 	exit 0
 fi
 
