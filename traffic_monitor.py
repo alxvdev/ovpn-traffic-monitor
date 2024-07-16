@@ -400,6 +400,7 @@ class OpenVPNUserManager:
 
 			try:
 				if len(self.users_data) > 0:
+					data = {}
 					with open(self.config.USERS_JSON_FILE, 'r') as f:
 						data = json.load(f)
 
@@ -410,7 +411,7 @@ class OpenVPNUserManager:
 			except IOError:
 				self.logger.log(f'Error: Could not write to {self.config.USERS_JSON_FILE}', 'error')
 			except Exception:
-				self.loggler.log(f'Could not write to {self.config.USERS_JSON_FILE}: {ex}', 'error')
+				self.logger.log(f'Could not write to {self.config.USERS_JSON_FILE}: {ex}', 'error')
 
 		return self.users_data
 
