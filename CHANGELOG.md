@@ -1,3 +1,9 @@
+commit 526e794f0204c2fc19a0b7d40cd1be7e777e065f
+Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
+Date:   Tue Jul 16 20:52:05 2024 +0700
+
+    fix: fix threads bugs
+
 commit ef65fd2771aff9641954eb9999485fae125ab6a4
 Author: Alexeev Bronislav <bro.alexeev@inbox.ru>
 Date:   Mon Jul 15 23:26:18 2024 +0700
