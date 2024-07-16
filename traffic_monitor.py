@@ -231,7 +231,7 @@ class TCPDumpManager:
 			try:
 				output = process.stdout.readline()
 
-				if output == b'' and process.poll() is not None:
+				if output == b'' and process.poll() is None:
 					print('Stop monitoring user traffic...')
 					break
 				else:
