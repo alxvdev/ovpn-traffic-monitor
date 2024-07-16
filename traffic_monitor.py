@@ -262,9 +262,7 @@ class TCPDumpManager:
 		:param virtual_ip: user virtual IP Address
 		"""
 		try:
-			tcpdump_filter = f'src {virtual_ip} and (net '
-			tcpdump_filter += " or net ".join(self.config.MONITORING_SITES)
-			tcpdump_filter += ')'
+			tcpdump_filter = f'src {virtual_ip}'
 			process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, '-U' '-n', tcpdump_filter],
 										stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 			self.logger.log(f'Executing a command to monitor network traffic: tcpdump -i {self.config.NETWORK_INTERFACE} -U -n {tcpdump_filter}', 'info')
@@ -424,9 +422,7 @@ class OpenVPNUserManager:
 				user_uuid = users_data[real_ip]['uuid']
 
 				if real_ip not in self.tcpdump_manager.active_processes:
-					thread_monitor = Thread(target=self.tcpdump_manager.monitor_user_traffic, args=(user_uuid, real_ip, virtual_ip))
-					thread_monitor.start()
-					thread_monitor.join()
+					self.tcpdump_manager.monitor_user_traffic(user_uuid, real_ip, virtual_ip)
 			except Exception as ex:
 				self.logger.log(f'Error when start active user monitoring threads: {ex}', 'error')
 				exit(1)
