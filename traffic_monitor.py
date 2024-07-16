@@ -302,12 +302,12 @@ class TCPDumpManager:
 		if user_ip in self.active_processes:
 			try:
 				self.logger.log(f'Stop user traffic monitoring: {user_ip}', 'info')
-				process = self.active_processes[user_ip]['process']
-				process.terminate()
-				self.logger.log(f'Terminated user traffic monitoring process ({user_ip})', 'debug')
-				thread = self.active_processes[user_ip]['thread']
-				thread.stop()
-				self.logger.log(f'Stopped user traffic monitoring thread ({user_ip})', 'debug')
+				# process = self.active_processes[user_ip]['process']
+				# process.terminate()
+				# self.logger.log(f'Terminated user traffic monitoring process ({user_ip})', 'debug')
+				# thread = self.active_processes[user_ip]['thread']
+				# thread.stop()
+				# self.logger.log(f'Stopped user traffic monitoring thread ({user_ip})', 'debug')
 				del self.active_processes[user_ip]
 			except Exception as ex:
 				self.logger.log(f'Error occurred when stopping user traffic monitoring: {ex}', 'warning')
