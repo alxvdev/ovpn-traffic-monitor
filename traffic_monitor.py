@@ -404,9 +404,9 @@ class OpenVPNUserManager:
 						with open(self.config.USERS_JSON_FILE, 'r') as f:
 							data = json.load(f)
 					except ValueError:
-						self.logger.log(f'No users in {self.config.USERS_JSON_FILE}', 'debug')
-					else:
-						self.users_data.update(data)
+						continue
+					
+					self.users_data.update(data)
 
 					with open(self.config.USERS_JSON_FILE, 'w') as f:
 						json.dump(self.users_data, f, indent=4)
@@ -553,15 +553,6 @@ def main():
 		openvpn_user_manager.delete_user(args.delete)
 		exit(1)
 
-	logger.log('Initial update user monitoring', 'debug')
-	try:
-		openvpn_user_manager.update_user_monitoring()
-	except Exception as ex:
-		logger.log(f'Error occurred when update user monitoring: {ex} ', 'error')
-		exit(1)
-	else:
-		logger.log('Successfully updated!', 'info')
-
 	logger.log('Initial update user data', 'debug')
 	try:
 		openvpn_user_manager.update_user_data()
@@ -571,11 +562,20 @@ def main():
 	else:
 		logger.log('Successfully updated!', 'info')
 
+	logger.log('Initial update user monitoring', 'debug')
+	try:
+		openvpn_user_manager.update_user_monitoring()
+	except Exception as ex:
+		logger.log(f'Error occurred when update user monitoring: {ex} ', 'error')
+		exit(1)
+	else:
+		logger.log('Successfully updated!', 'info')
+
 	logger.log('Start program loop...', 'debug')
 	while True:
 		try:
-			openvpn_user_manager.update_user_monitoring()
 			openvpn_user_manager.update_user_data()
+			openvpn_user_manager.update_user_monitoring()
 		except KeyboardInterrupt:
 			print('[yellow]Get KeyboardInterrupt: stop...[/yellow]')
 			break
