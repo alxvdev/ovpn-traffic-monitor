@@ -231,19 +231,15 @@ class TCPDumpManager:
 			try:
 				output = process.stdout.readline()
 
-				if output == b'' and process.poll() is None:
-					print('Stop monitoring user traffic...')
-					break
-				else:
-					output = output.decode()
-					try:
-						website = output.split(' ')[4].split('.')
-						website = '.'.join(website[:-1]).strip()
-					except Exception:
-						continue
+				output = output.decode()
+				try:
+					website = output.split(' ')[4].split('.')
+					website = '.'.join(website[:-1]).strip()
+				except Exception:
+					continue
 					
-					if website == process_data['virtual_ip']:
-						continue
+				if website == process_data['virtual_ip']:
+					continue
 
 				print(f'Traffic detected {process_data["uuid"]}: {process_data["virtual_ip"]}/{process_data["real_ip"]} -> {self.get_hostname_from_ip(website)} ({self.get_hostname_from_ip(website)})')
 				TrafficMonitorLogger.log_website_visit(self.config.TRAFFIC_LOG, process_data['real_ip'], process_data['virtual_ip'], process_data['uuid'], f'{website}/{self.get_hostname_from_ip(website)}')
@@ -262,6 +258,9 @@ class TCPDumpManager:
 		:param virtual_ip: user virtual IP Address
 		"""
 		try:
+			if real_ip in self.active_processes:
+				return
+
 			tcpdump_filter = f'src {virtual_ip}'
 			process = subprocess.Popen(['tcpdump', '-i', self.config.NETWORK_INTERFACE, '-U' '-n', tcpdump_filter],
 										stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -281,6 +280,7 @@ class TCPDumpManager:
 			try:
 				thread_monitor = Thread(target=self.traffic_logging, args=(process_data,))
 				thread_monitor.start()
+				thread_monitor.join()
 			except Exception as ex:
 				self.logger.log(f'Warning (must be error) occurred when starting thread: {ex}', 'warning')
 			else:
@@ -290,6 +290,8 @@ class TCPDumpManager:
 			self.active_processes[real_ip] = process_data
 		except Exception as ex:
 			self.logger.log(f'Error occurred when start monitor user traffic thread: {ex}', 'error')
+
+		return
 
 	def stop_user_traffic_monitoring(self, user_ip: str) -> None:
 		"""
