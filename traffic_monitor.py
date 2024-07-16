@@ -401,10 +401,13 @@ class OpenVPNUserManager:
 			try:
 				if len(self.users_data) > 0:
 					data = {}
-					with open(self.config.USERS_JSON_FILE, 'r') as f:
-						data = json.load(f)
-
-					self.users_data.update(data)
+					try:
+						with open(self.config.USERS_JSON_FILE, 'r') as f:
+							data = json.load(f)
+					except ValueError:
+						self.logger.log(f'No users in {self.config.USERS_JSON_FILE}', 'debug')
+					else:
+						self.users_data.update(data)
 
 					with open(self.config.USERS_JSON_FILE, 'w') as f:
 						json.dump(self.users_data, f, indent=4)
